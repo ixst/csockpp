@@ -9,19 +9,20 @@
 namespace csockpp {
 
 class Address {
+protected:
+  uint8_t* data_;
+
 public:
   socklen_t size;
-  const AddressFamily& family;
+  AddressFamily& family;
+  struct sockaddr& addr;
 
 public:
   Address(void* addr, decltype(sizeof(0)) size) noexcept;
   ~Address() noexcept;
 
 public:
-  sockaddr* const operator&() const noexcept;
-
-private:
-  uint8_t* buffer_;
+  bool operator==(const Address&) const noexcept;
 
 };
 

@@ -1,7 +1,6 @@
 #include "socket_os_impl.hh"
 
 #include <unistd.h>
-#include <errno.h>
 
 #include "csockpp/exception.hh"
 

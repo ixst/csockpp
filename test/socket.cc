@@ -1,7 +1,7 @@
-#include <errno.h>
+#include "csockpp/socket.hh"
 
 #include "gtest/gtest.h"
-#include "csockpp/socket.hh"
+
 #include "csockpp/socket_impl.hh"
 #include "csockpp/exception.hh"
 

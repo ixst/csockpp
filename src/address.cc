@@ -1,8 +1,8 @@
 #include "csockpp/address.hh"
 
-#include <cstring>
-
 #include <netinet/in.h>
+
+#include <cstring>
 
 
 namespace csockpp {
@@ -15,25 +15,29 @@ auto* NewBuffer(uint8_t* data, decltype(sizeof(0)) size) noexcept {
   return buffer;
 }
 
-const AddressFamily& GetAddressFamily(void* data) {
+AddressFamily& GetAddressFamily(void* data) {
   auto* sa_family = &static_cast<sockaddr*>(data)->sa_family;
-  return (const AddressFamily&)(*sa_family);
+  return (AddressFamily&)(*sa_family);
 }
 
 }
 
 Address::Address(void* data, decltype(sizeof(0)) size) noexcept
-    : size(static_cast<socklen_t>(size)),
+    : data_(address_internal::NewBuffer((uint8_t*)data, size)),
+      size(static_cast<socklen_t>(size)),
       family(address_internal::GetAddressFamily(data)),
-      buffer_(address_internal::NewBuffer((uint8_t*)data, size))
+      addr((struct sockaddr&)*data_)
 {}
 
 Address::~Address() noexcept {
-  delete[] buffer_;
+  delete[] data_;
 }
 
-sockaddr* const Address::operator&() const noexcept {
-  return (sockaddr*)buffer_;
+bool Address::operator==(const Address& address) const noexcept {
+  if(size != address.size) {
+    return false;
+  }
+  return !std::memcmp(data_, address.data_, size);
 }
 
 }

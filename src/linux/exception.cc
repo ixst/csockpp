@@ -1,20 +1,20 @@
 #include "csockpp/exception.hh"
 
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 
 
 namespace csockpp {
 
-SocketException::SocketException(int error) noexcept 
+SystemException::SystemException(int error) noexcept 
     : error(error)
 {}
 
-SocketException::SocketException() noexcept 
-    : SocketException(errno)
+SystemException::SystemException() noexcept 
+    : SystemException(errno)
 {}
 
-const char* SocketException::what() const noexcept {
+const char* SystemException::what() const noexcept {
   return strerror(error);
 }
 
