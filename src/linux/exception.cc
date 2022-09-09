@@ -6,8 +6,12 @@
 
 namespace csockpp {
 
+SocketException::SocketException(int error) noexcept 
+    : error(error)
+{}
+
 SocketException::SocketException() noexcept 
-    : error(errno)
+    : SocketException(errno)
 {}
 
 const char* SocketException::what() const noexcept {

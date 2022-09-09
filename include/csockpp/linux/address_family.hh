@@ -7,7 +7,7 @@
 namespace csockpp {
 namespace linux_ {
 
-enum class AddressFamily {
+enum class AddressFamily : sa_family_t {
 #ifdef AF_UNSPEC
   kUnspec = AF_UNSPEC,
 #endif

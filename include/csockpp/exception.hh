@@ -11,6 +11,7 @@ public:
   int error;
 
 public:
+  SocketException(int error) noexcept;
   SocketException() noexcept;
 
 public:

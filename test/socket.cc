@@ -16,8 +16,20 @@ public:
 
 public:
   bool CloseImpl() noexcept override {
-    errno = 1;
     return false;
+  }
+
+};
+
+class NoThrowInCloseSocketImpl : public SocketImpl {
+public:
+  NoThrowInCloseSocketImpl() noexcept 
+      : SocketImpl(0)
+  {}
+
+public:
+  bool CloseImpl() noexcept override {
+    return true;
   }
 
 };
@@ -34,17 +46,19 @@ TEST(Socket, throw_in_constructor) {
 TEST(Socket, throw_in_close) {
   EXPECT_THROW(
       {
-        try {
-          Socket socket(new ThrowInCloseSocketImpl());
-          socket.Close();
-        } catch (const SocketCloseException& e) {
-          EXPECT_EQ(e.what(), strerror(1));
-          throw e;
-        }
+        Socket socket(new ThrowInCloseSocketImpl());
+        socket.Close();
       }, 
       SocketCloseException
   );
 }
 
-TEST(Socket, constructor) {
+TEST(Socket, no_throw_in_close) {
+  EXPECT_NO_THROW(
+      {
+        ISocket* socket = new Socket(new NoThrowInCloseSocketImpl());
+        socket->Close();
+        delete socket;
+      }
+  );
 }
