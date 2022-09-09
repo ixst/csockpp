@@ -11,13 +11,13 @@ namespace csockpp {
 
 class InetAddress : public Address {
 public:
-  InetAddress(void* addr, decltype(sizeof(0)) size) noexcept;
+  InetAddress(const void* addr, decltype(sizeof(0)) size) noexcept;
 
 public:
   virtual uint16_t port() const noexcept = 0;
-  virtual void port(uint16_t value) noexcept = 0;
+  virtual void port(const uint16_t& value) noexcept = 0;
   virtual std::string ip() const noexcept = 0;
-  virtual void ip(std::string value) = 0;
+  virtual void ip(const std::string& value) = 0;
   
   virtual std::string str() const noexcept = 0;
  

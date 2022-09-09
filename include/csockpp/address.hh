@@ -18,7 +18,7 @@ public:
   struct sockaddr& addr;
 
 public:
-  Address(void* addr, decltype(sizeof(0)) size) noexcept;
+  Address(const void* addr, decltype(sizeof(0)) size) noexcept;
   ~Address() noexcept;
 
 public:

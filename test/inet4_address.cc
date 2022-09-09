@@ -27,11 +27,7 @@ TEST(Inet4Address, constructor_ip_port) {
 
 TEST(Inet4Address, constructor_sockaddr_in) {
   struct sockaddr_in addr = {};
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(mock_port);
-  inet_pton(AF_INET, mock_ip.c_str(), &addr.sin_addr);
   Inet4Address address(addr);
-
   EXPECT_EQ(std::memcmp(&address.addr, &addr, sizeof(addr)), 0);
 }
 

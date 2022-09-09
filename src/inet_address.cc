@@ -4,7 +4,7 @@
 namespace csockpp {
 
 
-InetAddress::InetAddress(void* addr, decltype(sizeof(0)) size) noexcept 
+InetAddress::InetAddress(const void* addr, decltype(sizeof(0)) size) noexcept 
     : Address(addr, size)
 {}
 

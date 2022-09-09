@@ -12,19 +12,19 @@ namespace csockpp {
 
 class Inet4Address : public InetAddress {
 public:
-  Inet4Address(struct sockaddr_in addr) noexcept;
-  Inet4Address(std::string ip, uint16_t port);
+  Inet4Address(const struct sockaddr_in& addr) noexcept;
+  Inet4Address(const std::string& ip, const uint16_t& port);
 
 public:
   uint16_t port() const noexcept override;
-  void port(uint16_t value) noexcept override;
+  void port(const uint16_t& value) noexcept override;
   std::string ip() const noexcept override;
-  void ip(std::string value) override;
+  void ip(const std::string& value) override;
   
   std::string str() const noexcept override;
 
 public:
-  bool operator==(const sockaddr_in& addr) const noexcept;
+  bool operator==(const struct sockaddr_in& addr) const noexcept;
 
 private:
   struct sockaddr_in& addr_in_;

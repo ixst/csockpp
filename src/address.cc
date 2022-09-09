@@ -9,7 +9,7 @@ namespace csockpp {
 
 namespace address_internal {
 
-auto* NewBuffer(uint8_t* data, decltype(sizeof(0)) size) noexcept {
+auto* NewBuffer(const uint8_t* data, decltype(sizeof(0)) size) noexcept {
   auto* buffer = new uint8_t[size];
   std::memcpy(buffer, data, size);
   return buffer;
@@ -22,10 +22,10 @@ AddressFamily& GetAddressFamily(void* data) {
 
 }
 
-Address::Address(void* data, decltype(sizeof(0)) size) noexcept
+Address::Address(const void* data, decltype(sizeof(0)) size) noexcept
     : data_(address_internal::NewBuffer((uint8_t*)data, size)),
       size(static_cast<socklen_t>(size)),
-      family(address_internal::GetAddressFamily(data)),
+      family(address_internal::GetAddressFamily(data_)),
       addr((struct sockaddr&)*data_)
 {}
 
