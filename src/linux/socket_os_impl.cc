@@ -28,16 +28,28 @@ int CreateDescriptor(
 
 }
 
+SocketOsImpl::SocketOsImpl(int descriptor) noexcept 
+    : SocketImpl(descriptor)
+{}
+
 SocketOsImpl::SocketOsImpl(
     AddressFamily af,
     Type type,
     Protocol protocol
 ) 
-    : SocketImpl(socket_os_impl_internal::CreateDescriptor(af, type, protocol))
+    : SocketOsImpl(socket_os_impl_internal::CreateDescriptor(af, type, protocol))
 {}
 
+SocketImpl* SocketOsImpl::clone() const noexcept {
+  return new SocketOsImpl(descriptor);
+}
+
 bool SocketOsImpl::CloseImpl() noexcept {
-  return close(descriptor) != -1;
+  return close(descriptor) == 0;
+}
+
+bool SocketOsImpl::BindImpl(const Address& address) noexcept {
+  return bind(descriptor, &address.addr, address.size) == 0;
 }
 
 }

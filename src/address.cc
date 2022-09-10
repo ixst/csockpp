@@ -29,6 +29,19 @@ Address::Address(const void* data, decltype(sizeof(0)) size) noexcept
       addr((struct sockaddr&)*data_)
 {}
 
+Address::Address(const Address& address) noexcept
+    : Address(address.data_, address.size)
+{}
+
+Address::Address(Address&& address) noexcept
+    : data_(address.data_),
+      size(address.size),
+      family(address_internal::GetAddressFamily(data_)),
+      addr((struct sockaddr&)*data_)
+{
+  address.data_ = nullptr;
+}
+
 Address::~Address() noexcept {
   delete[] data_;
 }

@@ -4,35 +4,59 @@
 
 #include "csockpp/socket_impl.hh"
 #include "csockpp/exception.hh"
+#include "csockpp/inet4_address.hh"
 
 
 using namespace csockpp;
 
-class ThrowInCloseSocketImpl : public SocketImpl {
+class NoThrowSocketImpl : public SocketImpl {
 public:
-  ThrowInCloseSocketImpl() noexcept 
-      : SocketImpl(0)
+  NoThrowSocketImpl(int descriptor) noexcept
+      : SocketImpl(descriptor)
+  {}
+
+  NoThrowSocketImpl() noexcept 
+      : NoThrowSocketImpl(1)
   {}
 
 public:
-  bool CloseImpl() noexcept override {
-    return false;
+  SocketImpl* clone() const noexcept {
+    return new NoThrowSocketImpl(descriptor);
   }
-
-};
-
-class NoThrowInCloseSocketImpl : public SocketImpl {
-public:
-  NoThrowInCloseSocketImpl() noexcept 
-      : SocketImpl(0)
-  {}
 
 public:
   bool CloseImpl() noexcept override {
     return true;
   }
 
+  bool BindImpl(const Address& address) noexcept override {
+    return true;
+  }
+
 };
+
+TEST(ISocket, destructor) {
+  ISocket* socket = new Socket(1);
+  delete socket;
+}
+
+TEST(Socket, constructor) {
+  Socket socket(1);
+  EXPECT_EQ(socket.descriptor, 1);
+}
+
+TEST(Socket, copy_constructor) {
+  Socket socket(1);
+  Socket copied_socket(socket);
+  EXPECT_EQ(copied_socket.descriptor, 1);
+
+}
+
+TEST(Socket, move_constructor) {
+  Socket socket(1);
+  Socket moved_socket(std::move(socket));
+  EXPECT_EQ(moved_socket.descriptor, 1);
+}
 
 TEST(Socket, throw_in_constructor) {
   EXPECT_THROW(
@@ -46,7 +70,7 @@ TEST(Socket, throw_in_constructor) {
 TEST(Socket, throw_in_close) {
   EXPECT_THROW(
       {
-        Socket socket(new ThrowInCloseSocketImpl());
+        Socket socket(-1);
         socket.Close();
       }, 
       SocketCloseException
@@ -56,9 +80,29 @@ TEST(Socket, throw_in_close) {
 TEST(Socket, no_throw_in_close) {
   EXPECT_NO_THROW(
       {
-        ISocket* socket = new Socket(new NoThrowInCloseSocketImpl());
-        socket->Close();
-        delete socket;
+        Socket socket(new NoThrowSocketImpl());
+        socket.Close();
+      }
+  );
+}
+
+TEST(Socket, throw_in_bind) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        Inet4Address address("127.0.0.1", 80);
+        socket.Bind(address);
+      },
+      SocketBindException
+  );
+}
+
+TEST(Socket, no_throw_in_bind) {
+  EXPECT_NO_THROW(
+      {
+        Socket socket(new NoThrowSocketImpl());
+        Inet4Address address("127.0.0.1", 80);
+        socket.Bind(address);
       }
   );
 }

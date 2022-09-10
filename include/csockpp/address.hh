@@ -19,6 +19,8 @@ public:
 
 public:
   Address(const void* addr, decltype(sizeof(0)) size) noexcept;
+  Address(const Address& address) noexcept;
+  Address(Address&& address) noexcept;
   ~Address() noexcept;
 
 public:

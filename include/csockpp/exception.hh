@@ -25,6 +25,8 @@ class SocketOpenException : public SocketException {};
 
 class SocketCloseException : public SocketException {};
 
+class SocketBindException : public SocketException {};
+
 class IpParseException : public SystemException {};
 
 }

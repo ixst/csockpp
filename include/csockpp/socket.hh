@@ -4,6 +4,7 @@
 #include "address_family.hh"
 #include "type.hh"
 #include "protocol.hh"
+#include "address.hh"
 #include "isocket.hh"
 
 
@@ -22,10 +23,14 @@ public:
       Type type,
       Protocol protocol
   );
+  Socket(int descriptor) noexcept;
+  Socket(const Socket& socket) noexcept;
+  Socket(Socket&& socket) noexcept;
   ~Socket() noexcept override;
 
 public:
   void Close() override;
+  void Bind(const Address& address) override;
 
 private:
   SocketImpl* impl_;

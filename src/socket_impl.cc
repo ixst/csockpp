@@ -15,4 +15,10 @@ void SocketImpl::Close() {
   }
 }
 
+void SocketImpl::Bind(const Address& address) {
+  if(!BindImpl(address)) {
+    throw SocketBindException();
+  }
+}
+
 }

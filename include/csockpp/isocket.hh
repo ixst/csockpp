@@ -1,6 +1,8 @@
 #ifndef CSOCKPP_ISOCKET_HH__
 #define CSOCKPP_ISOCKET_HH__
 
+#include "address.hh"
+
 
 namespace csockpp {
 
@@ -10,6 +12,7 @@ public:
 
 public:
   virtual void Close() = 0;
+  virtual void Bind(const Address& address) = 0;
 
 };
 

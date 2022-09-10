@@ -2,6 +2,7 @@
 
 #include <netinet/in.h>
 
+#include <utility>
 #include <cstring>
 
 #include "gtest/gtest.h"
@@ -14,6 +15,20 @@ TEST(Address, constructor) {
   Address address(&addr, sizeof(addr));
   EXPECT_EQ(address.size, sizeof(addr));
   EXPECT_EQ(std::memcmp(&address.addr, &addr, sizeof(addr)), 0);
+}
+
+TEST(Address, copy_constructor) {
+  struct sockaddr_in addr = {};
+  Address address(&addr, sizeof(addr));
+  Address copied_address = address;
+  EXPECT_EQ(std::memcmp(&address.addr, &copied_address.addr, address.size), 0);
+}
+
+TEST(Address, move_constructor) {
+  struct sockaddr_in addr = {};
+  Address address(&addr, sizeof(addr));
+  Address moved_address = std::move(address);
+  EXPECT_EQ(std::memcmp(&moved_address.addr, &addr, sizeof(addr)), 0);
 }
 
 TEST(Address, operator_equal_to_address) {
