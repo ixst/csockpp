@@ -47,7 +47,7 @@ Address::~Address() noexcept {
 }
 
 bool Address::operator==(const Address& address) const noexcept {
-  if(size != address.size) {
+  if (size != address.size) {
     return false;
   }
   return !std::memcmp(data_, address.data_, size);

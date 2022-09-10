@@ -34,6 +34,7 @@ public:
   void Close() override;
   void Bind(const Address& address) override;
   void Listen(const int& backlog = kMaxConn) override;
+  bool Connect(const Address& address) override;
 
 private:
   SocketImpl* impl_;

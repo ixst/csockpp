@@ -23,7 +23,7 @@ struct sockaddr_in6 CreateSockAddr(
   addr.sin6_port = htons(port);
   addr.sin6_flowinfo = flowinfo;
   addr.sin6_scope_id = scope_id;
-  if(!inet_pton(AF_INET6, ip.data(), &addr.sin6_addr)) {
+  if (!inet_pton(AF_INET6, ip.data(), &addr.sin6_addr)) {
     throw IpParseException();
   }
   return addr;
@@ -69,7 +69,7 @@ std::string Inet6Address::ip() const noexcept {
 }
 
 void Inet6Address::ip(const std::string& value) {
-  if(!inet_pton(AF_INET6, value.c_str(), &addr_in_.sin6_addr)) {
+  if (!inet_pton(AF_INET6, value.c_str(), &addr_in_.sin6_addr)) {
     throw IpParseException();
   }
 }

@@ -9,37 +9,59 @@
 
 using namespace csockpp;
 
-class NoThrowSocketImpl : public SocketImpl {
+class MockSocketImpl : public SocketImpl {
 public:
-  NoThrowSocketImpl(int descriptor) noexcept
+  std::function<bool()> close_impl;
+  std::function<bool(const Address& address)> bind_impl;
+  std::function<bool(const int& backlog)> listen_impl;
+  std::function<int(const Address& address)> connect_impl;
+
+public:
+  MockSocketImpl(int descriptor) noexcept
       : SocketImpl(descriptor)
   {}
 
-  NoThrowSocketImpl() noexcept 
-      : NoThrowSocketImpl(1)
+  MockSocketImpl() noexcept 
+      : MockSocketImpl(1)
   {}
 
 public:
   SocketImpl* clone() const noexcept {
-    return new NoThrowSocketImpl(descriptor);
+    return new MockSocketImpl(descriptor);
   }
 
 public:
   bool CloseImpl() noexcept override {
+    if (close_impl) {
+      return close_impl();
+    }
     return true;
   }
 
   bool BindImpl(const Address& address) noexcept override {
+    if (bind_impl) {
+      return bind_impl(address);
+    }
     return true;
   }
 
   bool ListenImpl(const int& backlog) noexcept override {
+    if (listen_impl) {
+      return listen_impl(backlog);
+    }
     return true;
+  }
+
+  int ConnectImpl(const Address& address) noexcept override {
+    if (connect_impl) {
+      return connect_impl(address);
+    }
+    return 0;
   }
 
 };
 
-TEST(ISocket, destructor) {
+TEST(ISocket, virtual_destructor) {
   ISocket* socket = new Socket(1);
   delete socket;
 }
@@ -62,7 +84,7 @@ TEST(Socket, move_constructor) {
   EXPECT_EQ(moved_socket.descriptor, 1);
 }
 
-TEST(Socket, throw_in_constructor) {
+TEST(Socket, constructor_throw) {
   EXPECT_THROW(
       {
         Socket socket(AddressFamily::kInet, Type::kStream, Protocol::kUdp);
@@ -71,7 +93,7 @@ TEST(Socket, throw_in_constructor) {
   );
 }
 
-TEST(Socket, throw_in_close) {
+TEST(Socket, close_throw) {
   EXPECT_THROW(
       {
         Socket socket(-1);
@@ -81,16 +103,16 @@ TEST(Socket, throw_in_close) {
   );
 }
 
-TEST(Socket, no_throw_in_close) {
+TEST(Socket, close_no_throw) {
   EXPECT_NO_THROW(
       {
-        Socket socket(new NoThrowSocketImpl());
+        Socket socket(new MockSocketImpl());
         socket.Close();
       }
   );
 }
 
-TEST(Socket, throw_in_bind) {
+TEST(Socket, bind_throw) {
   EXPECT_THROW(
       {
         Socket socket(-1);
@@ -101,17 +123,17 @@ TEST(Socket, throw_in_bind) {
   );
 }
 
-TEST(Socket, no_throw_in_bind) {
+TEST(Socket, bind_no_throw) {
   EXPECT_NO_THROW(
       {
-        Socket socket(new NoThrowSocketImpl());
+        Socket socket(new MockSocketImpl());
         Inet4Address address("127.0.0.1", 80);
         socket.Bind(address);
       }
   );
 }
 
-TEST(Socket, throw_in_listen) {
+TEST(Socket, listen_throw) {
   EXPECT_THROW(
       {
         Socket socket(-1);
@@ -121,11 +143,39 @@ TEST(Socket, throw_in_listen) {
   );
 }
 
-TEST(Socket, no_throw_in_listen) {
+TEST(Socket, listen_no_throw) {
   EXPECT_NO_THROW(
       {
-        Socket socket(new NoThrowSocketImpl());
+        Socket socket(new MockSocketImpl());
         socket.Listen();
       }
+  );
+}
+
+TEST(Socket, connect_return_true) {
+  Socket socket(new MockSocketImpl());
+  Inet4Address address("127.0.0.1", 80);
+  EXPECT_TRUE(socket.Connect(address));
+}
+
+TEST(Socket, connect_return_false) {
+  auto* socket_impl = new MockSocketImpl();
+  socket_impl->connect_impl = 
+      [&](const Address& address) -> int {
+        return 1;
+      };
+  Socket socket(socket_impl);
+  Inet4Address address("127.0.0.1", 80);
+  EXPECT_FALSE(socket.Connect(address));
+}
+
+TEST(Socket, connect_throw) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        Inet4Address address("127.0.0.1", 80);
+        socket.Connect(address);
+      },
+      SocketConnectException
   );
 }

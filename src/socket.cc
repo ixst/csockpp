@@ -59,4 +59,8 @@ void Socket::Listen(const int& backlog) {
   impl_->Listen(backlog);
 }
 
+bool Socket::Connect(const Address& address) {
+  return impl_->Connect(address);
+}
+
 }

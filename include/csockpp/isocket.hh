@@ -14,6 +14,7 @@ public:
   virtual void Close() = 0;
   virtual void Bind(const Address& address) = 0;
   virtual void Listen(const int& backlog) = 0;
+  virtual bool Connect(const Address& address) = 0;
 
 };
 

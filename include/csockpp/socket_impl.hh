@@ -21,11 +21,13 @@ public:
   void Close() override;
   void Bind(const Address& address) override;
   void Listen(const int& backlog) override;
+  bool Connect(const Address& address) override;
 
 private:
   virtual bool CloseImpl() noexcept = 0;
   virtual bool BindImpl(const Address& address) noexcept = 0;
   virtual bool ListenImpl(const int& backlog) noexcept = 0;
+  virtual int ConnectImpl(const Address& address) noexcept = 0;
   
 };
 

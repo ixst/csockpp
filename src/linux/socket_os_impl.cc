@@ -20,7 +20,7 @@ int CreateDescriptor(
       static_cast<int>(type),
       static_cast<int>(protocol)
   );
-  if(descriptor != -1) {
+  if (descriptor != -1) {
     return descriptor;
   }
   throw SocketOpenException();
@@ -54,6 +54,27 @@ bool SocketOsImpl::BindImpl(const Address& address) noexcept {
 
 bool SocketOsImpl::ListenImpl(const int& backlog) noexcept {
   return listen(descriptor, backlog) == 0;
+}
+
+int SocketOsImpl::ConnectImpl(const Address& address) noexcept {
+  if (connect(descriptor, &address.addr, address.size) == 0) {
+    return 0;
+  } else if (
+#ifdef EWOULDBLOCK
+      errno == EWOULDBLOCK ||
+#endif
+#ifdef EAGAIN
+      errno == EAGAIN ||
+#endif
+#ifdef EINPROGRESS
+      errno == EINPROGRESS ||
+#endif
+      false
+  ) {
+    return 1;
+  } else {
+    return -1;
+  }
 }
 
 }

@@ -19,7 +19,7 @@ struct sockaddr_in CreateSockAddr(
   struct sockaddr_in addr = {};
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
-  if(!inet_pton(AF_INET, ip.data(), &addr.sin_addr)) {
+  if (!inet_pton(AF_INET, ip.data(), &addr.sin_addr)) {
     throw IpParseException();
   }
   return addr;
@@ -53,7 +53,7 @@ std::string Inet4Address::ip() const noexcept {
 }
 
 void Inet4Address::ip(const std::string& value) {
-  if(!inet_pton(AF_INET, value.c_str(), &addr_in_.sin_addr)) {
+  if (!inet_pton(AF_INET, value.c_str(), &addr_in_.sin_addr)) {
     throw IpParseException();
   }
 }
