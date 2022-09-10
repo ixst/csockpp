@@ -1,12 +1,20 @@
 #include "csockpp/socket.hh"
 
 #include <utility>
+#include <limits>
 
 #include "csockpp/socket_impl.hh"
 #include "socket_os_impl.hh"
 
 
 namespace csockpp {
+
+const int Socket::kMaxConn = 
+#ifndef SOMAXCONN
+    SOMAXCONN
+#else
+    std::numeric_limits<int>::max();
+#endif
 
 Socket::Socket(SocketImpl* impl) noexcept 
     : descriptor(impl->descriptor),
@@ -45,6 +53,10 @@ void Socket::Close() {
 
 void Socket::Bind(const Address& address) {
   impl_->Bind(address);
+}
+
+void Socket::Listen(const int& backlog) {
+  impl_->Listen(backlog);
 }
 
 }

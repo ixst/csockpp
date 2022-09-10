@@ -16,6 +16,8 @@ class Socket : public ISocket {
 public:
   const int& descriptor;
 
+  static const int kMaxConn;
+
 public:
   Socket(SocketImpl* impl) noexcept;
   Socket(
@@ -31,6 +33,7 @@ public:
 public:
   void Close() override;
   void Bind(const Address& address) override;
+  void Listen(const int& backlog = kMaxConn) override;
 
 private:
   SocketImpl* impl_;

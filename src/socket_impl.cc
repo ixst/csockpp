@@ -21,4 +21,10 @@ void SocketImpl::Bind(const Address& address) {
   }
 }
 
+void SocketImpl::Listen(const int& backlog) {
+  if(!ListenImpl(backlog)) {
+    throw SocketListenException();
+  }
+}
+
 }

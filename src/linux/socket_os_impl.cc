@@ -52,5 +52,9 @@ bool SocketOsImpl::BindImpl(const Address& address) noexcept {
   return bind(descriptor, &address.addr, address.size) == 0;
 }
 
+bool SocketOsImpl::ListenImpl(const int& backlog) noexcept {
+  return listen(descriptor, backlog) == 0;
+}
+
 }
 }

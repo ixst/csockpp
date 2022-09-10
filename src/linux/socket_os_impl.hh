@@ -26,6 +26,7 @@ public:
 private:
   bool CloseImpl() noexcept override;
   bool BindImpl(const Address& address) noexcept override;
+  bool ListenImpl(const int& backlog) noexcept override;
   
 };
 

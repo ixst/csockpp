@@ -33,6 +33,10 @@ public:
     return true;
   }
 
+  bool ListenImpl(const int& backlog) noexcept override {
+    return true;
+  }
+
 };
 
 TEST(ISocket, destructor) {
@@ -103,6 +107,25 @@ TEST(Socket, no_throw_in_bind) {
         Socket socket(new NoThrowSocketImpl());
         Inet4Address address("127.0.0.1", 80);
         socket.Bind(address);
+      }
+  );
+}
+
+TEST(Socket, throw_in_listen) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        socket.Listen();
+      },
+      SocketListenException
+  );
+}
+
+TEST(Socket, no_throw_in_listen) {
+  EXPECT_NO_THROW(
+      {
+        Socket socket(new NoThrowSocketImpl());
+        socket.Listen();
       }
   );
 }
