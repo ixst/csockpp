@@ -14,7 +14,7 @@ int CreateDescriptor(
     const AddressFamily& address_family,
     const Type& type,
     const Protocol& protocol,
-    const std::set<Flag>& flags
+    const std::set<Flag::Sock>& flags
 ) {
   int itype = static_cast<int>(type);
   for (const auto& flag : flags) {
@@ -42,7 +42,7 @@ SocketOsImpl::SocketOsImpl(
     const AddressFamily& address_family,
     const Type& type,
     const Protocol& protocol,
-    const std::set<Flag>& flags
+    const std::set<Flag::Sock>& flags
 ) 
     : SocketOsImpl(
           socket_os_impl_internal::CreateDescriptor(
@@ -93,7 +93,7 @@ int SocketOsImpl::ConnectImpl(const Address& address) noexcept {
 
 int SocketOsImpl::AcceptImpl(
     Address& address, 
-    const std::set<Flag>& flags
+    const std::set<Flag::Sock>& flags
 ) noexcept {
   int iflags = 0;
   for (const auto& flag : flags) {
@@ -109,6 +109,34 @@ int SocketOsImpl::AcceptImpl(
       ) == 0
   ) {
     return 0;
+  } else if (
+#ifdef EWOULDBLOCK
+      errno == EWOULDBLOCK ||
+#endif
+#ifdef EAGAIN
+      errno == EAGAIN ||
+#endif
+      false
+  ) {
+    return -2;
+  } else {
+    return -1;
+  }
+}
+
+ssize_t SocketOsImpl::SendImpl(
+    const void* buffer, 
+    const size_t& size,
+    const std::set<Flag::Msg>& flags
+) noexcept {
+  int iflags = 0;
+  for (const auto& flag : flags) {
+    iflags |= static_cast<int>(flag);
+  }
+  
+  auto sent_size = send(descriptor, buffer, size, iflags);
+  if (sent_size != -1) {
+    return sent_size;
   } else if (
 #ifdef EWOULDBLOCK
       errno == EWOULDBLOCK ||

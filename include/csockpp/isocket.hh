@@ -22,8 +22,13 @@ public:
   virtual void Connect(const Address& address) = 0;
   virtual Socket Accept(
       Address& address, 
-      const std::set<Flag>& flags = {}
+      const std::set<Flag::Sock>& flags = {}
   ) = 0;
+  virtual size_t Send(
+      const void* buffer, 
+      const size_t& size, 
+      const std::set<Flag::Msg>& flags = {}
+  ) = 0; 
 
 };
 

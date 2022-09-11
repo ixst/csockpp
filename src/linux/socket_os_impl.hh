@@ -20,7 +20,7 @@ public:
       const AddressFamily& af,
       const Type& type,
       const Protocol& protocol,
-      const std::set<Flag>& flags = {}
+      const std::set<Flag::Sock>& flags = {}
   );
 
 public:
@@ -33,7 +33,12 @@ private:
   int ConnectImpl(const Address& address) noexcept override;
   int AcceptImpl(
       Address& address, 
-      const std::set<Flag>& flags = {}
+      const std::set<Flag::Sock>& flags = {}
+  ) noexcept override;
+  ssize_t SendImpl(
+      const void* buffer,
+      const size_t& size, 
+      const std::set<Flag::Msg>& flags = {}
   ) noexcept override;
   
 };

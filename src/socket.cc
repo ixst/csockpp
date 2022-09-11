@@ -25,7 +25,7 @@ Socket::Socket(
     const AddressFamily& af,
     const Type& type,
     const Protocol& protocol,
-    const std::set<Flag>& flags
+    const std::set<Flag::Sock>& flags
 ) 
     : Socket(new SocketOsImpl(af, type, protocol, flags))
 {}
@@ -64,8 +64,16 @@ void Socket::Connect(const Address& address) {
   return impl_->Connect(address);
 }
 
-Socket Socket::Accept(Address& address, const std::set<Flag>& flags) {
+Socket Socket::Accept(Address& address, const std::set<Flag::Sock>& flags) {
   return impl_->Accept(address, flags);
+}
+
+size_t Socket::Send(
+    const void* buffer, 
+    const size_t& size,
+    const std::set<Flag::Msg>& flags
+) {
+  return impl_->Send(buffer, size, flags);
 }
 
 }

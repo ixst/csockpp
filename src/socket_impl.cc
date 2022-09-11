@@ -35,12 +35,28 @@ void SocketImpl::Connect(const Address& address) {
   }
 }
 
-Socket SocketImpl::Accept(Address& address, const std::set<Flag>& flags) {
+Socket SocketImpl::Accept(
+    Address& address, 
+    const std::set<Flag::Sock>& flags
+) {
   auto descriptor = AcceptImpl(address, flags);
   switch (descriptor) {
     case -1: throw SocketConnectException();
     case -2: throw SocketNonblockingException();
     default: return Socket(descriptor);
+  }
+}
+
+size_t SocketImpl::Send(
+    const void* buffer, 
+    const size_t& size, 
+    const std::set<Flag::Msg>& flags
+) {
+  auto sent_size = SendImpl(buffer, size, flags);
+  switch (sent_size) {
+    case -1: throw SocketSendException();
+    case -2: throw SocketNonblockingException();
+    default: return static_cast<size_t>(sent_size);
   }
 }
 

@@ -25,7 +25,16 @@ public:
   void Bind(const Address& address) override;
   void Listen(const int& backlog) override;
   void Connect(const Address& address) override;
-  Socket Accept(Address& address, const std::set<Flag>& flags = {}) override;
+  Socket Accept(
+      Address& address, 
+      const std::set<Flag::Sock>& flags = {}
+  ) override;
+  size_t Send(
+      const void* buffer,
+      const size_t& size, 
+      const std::set<Flag::Msg>& flags = {}
+  ) override;
+
 
 private:
   virtual bool CloseImpl() noexcept = 0;
@@ -34,7 +43,12 @@ private:
   virtual int ConnectImpl(const Address& address) noexcept = 0;
   virtual int AcceptImpl(
       Address& address, 
-      const std::set<Flag>& flags = {}
+      const std::set<Flag::Sock>& flags = {}
+  ) noexcept = 0;
+  virtual ssize_t SendImpl(
+      const void* buffer,
+      const size_t& size, 
+      const std::set<Flag::Msg>& flags = {}
   ) noexcept = 0;
   
 };
