@@ -13,11 +13,12 @@ protected:
   uint8_t* data_;
 
 public:
-  socklen_t size;
+  const socklen_t size;
   AddressFamily& family;
   struct sockaddr& addr;
 
 public:
+  Address() noexcept;
   Address(const void* addr, decltype(sizeof(0)) size) noexcept;
   Address(const Address& address) noexcept;
   Address(Address&& address) noexcept;

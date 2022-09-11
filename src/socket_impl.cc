@@ -1,6 +1,7 @@
 #include "csockpp/socket_impl.hh"
 
 #include "csockpp/exception.hh"
+#include "csockpp/socket.hh"
 
 
 namespace csockpp {
@@ -27,14 +28,19 @@ void SocketImpl::Listen(const int& backlog) {
   }
 }
 
-bool SocketImpl::Connect(const Address& address) {
-  auto result = ConnectImpl(address);
-  if (result == 0) {
-    return true;
-  } else if(result == 1) {
-    return false;
-  } else {
-    throw SocketConnectException();
+void SocketImpl::Connect(const Address& address) {
+  switch (ConnectImpl(address)) {
+    case -1: throw SocketConnectException();
+    case -2: throw SocketNonblockingException();
+  }
+}
+
+Socket SocketImpl::Accept(Address& address, const std::set<Flag>& flags) {
+  auto descriptor = AcceptImpl(address, flags);
+  switch (descriptor) {
+    case -1: throw SocketConnectException();
+    case -2: throw SocketNonblockingException();
+    default: return Socket(descriptor);
   }
 }
 

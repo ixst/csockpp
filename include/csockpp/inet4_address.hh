@@ -12,7 +12,7 @@ namespace csockpp {
 
 class Inet4Address : public InetAddress {
 public:
-  Inet4Address(const struct sockaddr_in& addr) noexcept;
+  Inet4Address(const struct sockaddr_in& addr = {}) noexcept;
   Inet4Address(const std::string& ip, const uint16_t& port);
 
 public:

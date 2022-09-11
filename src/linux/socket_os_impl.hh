@@ -1,6 +1,8 @@
 #ifndef CSOCKPP_LINUX_SOCKET_OS_IMPL_HH__
 #define CSOCKPP_LINUX_SOCKET_OS_IMPL_HH__
 
+#include <set>
+
 #include "csockpp/address_family.hh"
 #include "csockpp/type.hh"
 #include "csockpp/protocol.hh"
@@ -15,9 +17,10 @@ class SocketOsImpl : public SocketImpl {
 public:
   SocketOsImpl(int descriptor) noexcept;
   SocketOsImpl(
-      AddressFamily af,
-      Type type,
-      Protocol protocol
+      const AddressFamily& af,
+      const Type& type,
+      const Protocol& protocol,
+      const std::set<Flag>& flags = {}
   );
 
 public:
@@ -28,6 +31,10 @@ private:
   bool BindImpl(const Address& address) noexcept override;
   bool ListenImpl(const int& backlog) noexcept override;
   int ConnectImpl(const Address& address) noexcept override;
+  int AcceptImpl(
+      Address& address, 
+      const std::set<Flag>& flags = {}
+  ) noexcept override;
   
 };
 

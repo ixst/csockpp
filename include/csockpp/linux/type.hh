@@ -29,12 +29,6 @@ enum class Type {
 #ifdef SOCK_PACKET
   kPacket = SOCK_PACKET,
 #endif
-#ifdef SOCK_NONBLOCK
-  kNonblock = SOCK_NONBLOCK,
-#endif
-#ifdef SOCK_CLOEXEC
-  kCloseOnExecute = SOCK_CLOEXEC,
-#endif
 
 };
 

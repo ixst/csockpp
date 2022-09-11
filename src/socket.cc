@@ -22,11 +22,12 @@ Socket::Socket(SocketImpl* impl) noexcept
 {}
 
 Socket::Socket(
-    AddressFamily af,
-    Type type,
-    Protocol protocol
+    const AddressFamily& af,
+    const Type& type,
+    const Protocol& protocol,
+    const std::set<Flag>& flags
 ) 
-    : Socket(new SocketOsImpl(af, type, protocol))
+    : Socket(new SocketOsImpl(af, type, protocol, flags))
 {}
 
 Socket::Socket(int descriptor) noexcept
@@ -59,8 +60,12 @@ void Socket::Listen(const int& backlog) {
   impl_->Listen(backlog);
 }
 
-bool Socket::Connect(const Address& address) {
+void Socket::Connect(const Address& address) {
   return impl_->Connect(address);
+}
+
+Socket Socket::Accept(Address& address, const std::set<Flag>& flags) {
+  return impl_->Accept(address, flags);
 }
 
 }
