@@ -1,6 +1,7 @@
 #include "csockpp/socket.hh"
 
 #include <set>
+#include <cstring>
 #include <functional>
 
 #include "gtest/gtest.h"
@@ -9,25 +10,46 @@
 #include "csockpp/exception.hh"
 #include "csockpp/address.hh"
 #include "csockpp/inet4_address.hh"
+#include "csockpp/inet6_address.hh"
 
 
 using namespace csockpp;
 
 class MockSocketImpl : public SocketImpl {
 public:
-  std::function<bool()> close_impl;
-  std::function<bool(const Address& address)> bind_impl;
-  std::function<bool(const int& backlog)> listen_impl;
-  std::function<int(const Address& address)> connect_impl;
+  std::function<bool(const int& descriptor)> close_impl;
+  std::function<bool(
+      const int& descriptor,
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  )> bind_impl;
+  std::function<bool(
+      const int& descriptor, 
+      const int& backlog
+  )> listen_impl;
   std::function<int(
-      Address& address, 
-      const std::set<Flag::Sock>& flags
+      const int& descriptor,
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  )> connect_impl;
+  std::function<int(
+      const int& descriptor,
+      struct sockaddr* addr, 
+      socklen_t* addr_len,
+      const int& flags
   )> accept_impl;
   std::function<ssize_t(
+      const int& descriptor,
       const void* buffer, 
-      const size_t& size,
-      const std::set<Flag::Msg>& flags
+      const size_t& buffer_len,
+      const int& flags
   )> send_impl;
+  std::function<ssize_t(
+      const int& descriptor,
+      void* buffer, 
+      const size_t& buffer_len,
+      const int& flags
+  )> recv_impl;
 
 
 public:
@@ -35,61 +57,83 @@ public:
       : SocketImpl(descriptor)
   {}
 
-  MockSocketImpl() noexcept 
-      : MockSocketImpl(1)
-  {}
-
 public:
-  SocketImpl* clone() const noexcept {
+  SocketImpl* CloneImpl(int descriptor) const noexcept {
     return new MockSocketImpl(descriptor);
   }
 
 public:
-  bool CloseImpl() noexcept override {
+  bool CloseImpl(const int& descriptor) const noexcept override {
     if (close_impl) {
-      return close_impl();
+      return close_impl(descriptor);
     }
     return true;
   }
 
-  bool BindImpl(const Address& address) noexcept override {
+  bool BindImpl(
+      const int& descriptor,
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  ) const noexcept override {
     if (bind_impl) {
-      return bind_impl(address);
+      return bind_impl(descriptor, addr, addr_len);
     }
     return true;
   }
 
-  bool ListenImpl(const int& backlog) noexcept override {
+  bool ListenImpl(
+      const int& descriptor, 
+      const int& backlog
+  ) const noexcept override {
     if (listen_impl) {
-      return listen_impl(backlog);
+      return listen_impl(descriptor, backlog);
     }
     return true;
   }
 
-  int ConnectImpl(const Address& address) noexcept override {
+  int ConnectImpl(
+      const int& descriptor,
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  ) const noexcept override {
     if (connect_impl) {
-      return connect_impl(address);
+      return connect_impl(descriptor, addr, addr_len);
     }
     return 0;
   }
 
   int AcceptImpl(
-      Address& address, 
-      const std::set<Flag::Sock>& flags
-  ) noexcept override {
+      const int& descriptor,
+      struct sockaddr* addr, 
+      socklen_t* addr_len,
+      const int& flags
+  ) const noexcept override {
     if (accept_impl) {
-      return accept_impl(address, flags);
+      return accept_impl(descriptor, addr, addr_len, flags);
     }
     return 0;
   }
 
   ssize_t SendImpl(
+      const int& descriptor,
       const void* buffer,
-      const size_t& size,
-      const std::set<Flag::Msg>& flags
-  ) noexcept override {
+      const size_t& buffer_len, 
+      const int& flags
+  ) const noexcept override {
     if (send_impl) {
-      return send_impl(buffer, size, flags);
+      return send_impl(descriptor, buffer, buffer_len, flags);
+    }
+    return 0;
+  }
+
+  ssize_t RecvImpl(
+      const int& descriptor,
+      void* buffer,
+      const size_t& buffer_len, 
+      const int& flags
+  ) const noexcept override {
+    if (recv_impl) {
+      return recv_impl(descriptor, buffer, buffer_len, flags);
     }
     return 0;
   }
@@ -141,7 +185,13 @@ TEST(Socket, close_throw) {
 TEST(Socket, close_no_throw) {
   EXPECT_NO_THROW(
       {
-        Socket socket(new MockSocketImpl());
+        auto* socket_impl = new MockSocketImpl(1);
+        socket_impl->close_impl =
+            [&] (const auto& descriptor) -> auto {
+              EXPECT_EQ(descriptor, 1);
+              return true;
+            };
+        Socket socket(socket_impl);
         socket.Close();
       }
   );
@@ -161,8 +211,20 @@ TEST(Socket, bind_throw) {
 TEST(Socket, bind_no_throw) {
   EXPECT_NO_THROW(
       {
-        Socket socket(new MockSocketImpl());
         Inet4Address address("127.0.0.1", 80);
+        auto* socket_impl = new MockSocketImpl(2);
+        socket_impl->bind_impl =
+            [&] (
+                const auto& descriptor,
+                const auto* addr, 
+                const auto& addr_len
+            ) -> auto {
+              EXPECT_EQ(descriptor, 2);
+              EXPECT_EQ(addr_len, address.size);
+              EXPECT_EQ(std::memcmp(addr, &address.addr, addr_len), 0);
+              return true;
+            };
+        Socket socket(socket_impl);
         socket.Bind(address);
       }
   );
@@ -181,7 +243,17 @@ TEST(Socket, listen_throw) {
 TEST(Socket, listen_no_throw) {
   EXPECT_NO_THROW(
       {
-        Socket socket(new MockSocketImpl());
+        auto* socket_impl = new MockSocketImpl(3);
+        socket_impl->listen_impl =
+            [&] (
+                const auto& descriptor,
+                const auto& backlog
+            ) -> auto {
+              EXPECT_EQ(descriptor, 3);
+              EXPECT_EQ(backlog, Socket::kMaxConn);
+              return true;
+            };
+        Socket socket(socket_impl);
         socket.Listen();
       }
   );
@@ -190,8 +262,20 @@ TEST(Socket, listen_no_throw) {
 TEST(Socket, connect_no_throw) {
   EXPECT_NO_THROW(
       {
-        Socket socket(new MockSocketImpl());
         Inet4Address address("127.0.0.1", 80);
+        auto* socket_impl = new MockSocketImpl(4);
+        socket_impl->connect_impl = 
+            [&](
+                const auto& descriptor,
+                const auto* addr, 
+                const auto& addr_len
+            ) -> auto {
+              EXPECT_EQ(descriptor, 4);
+              EXPECT_EQ(addr_len, address.size);
+              EXPECT_EQ(std::memcmp(addr, &address.addr, addr_len), 0);
+              return 0;
+            };
+        Socket socket(socket_impl);
         socket.Connect(address);
       }
   );
@@ -200,13 +284,17 @@ TEST(Socket, connect_no_throw) {
 TEST(Socket, connect_throw_nonblocking_exception) {
   EXPECT_THROW(
       {
-        auto* socket_impl = new MockSocketImpl();
+        Inet4Address address("127.0.0.1", 80);
+        auto* socket_impl = new MockSocketImpl(0);
         socket_impl->connect_impl = 
-            [&](const Address& address) -> int {
+            [&](
+                const auto& descriptor,
+                const auto* addr, 
+                const auto& addr_len
+            ) -> auto {
               return -2;
             };
         Socket socket(socket_impl);
-        Inet4Address address("127.0.0.1", 80);
         socket.Connect(address);
       }, 
       SocketNonblockingException
@@ -225,39 +313,64 @@ TEST(Socket, connect_throw_connection_exception) {
 }
 
 TEST(Socket, accept_no_throw) {
-  auto* socket_impl = new MockSocketImpl();
+  auto* socket_impl = new MockSocketImpl(5);
+  Inet6Address src("::1", 80);
   socket_impl->accept_impl = 
-      [&](Address& address, const std::set<Flag::Sock>& flags) -> int {
-        return 1;
+      [&](
+          const auto& descriptor,
+          auto* addr, 
+          auto* addr_len,
+          const auto& flags
+      ) -> auto {
+        EXPECT_EQ(descriptor, 5);
+        EXPECT_EQ(
+            flags,
+            (
+                static_cast<int>(Flag::Sock::kNonblock) | 
+                static_cast<int>(Flag::Sock::kCloseOnExecute)
+            )
+        );
+        std::memcpy(addr, &src.addr, src.size);
+        *addr_len = src.size;
+        return 99;
       };
   Socket socket(socket_impl);
-  Inet4Address address("127.0.0.1", 80);
-  auto accepted = socket.Accept(address);
-  EXPECT_EQ(accepted.descriptor, 1);
+  Inet6Address dst;
+  auto accepted = socket.Accept(
+      dst, 
+      { Flag::Sock::kNonblock, Flag::Sock::kCloseOnExecute }
+  );
+  EXPECT_EQ(accepted.descriptor, 99);
+  EXPECT_EQ(dst.size, src.size);
+  EXPECT_EQ(std::memcmp(&dst.addr, &src.addr, src.size), 0);
 }
 
-TEST(Socket, accept_throw_connect_exception) {
+TEST(Socket, accept_throw_accept_exception) {
   EXPECT_THROW(
       {
         Socket socket(-1);
-        Inet4Address address("127.0.0.1", 80);
+        Inet4Address address;
         socket.Accept(address);
       },
-      SocketConnectException
+      SocketAcceptException
   );
 }
-
 
 TEST(Socket, accept_throw_nonblocking_exception) {
   EXPECT_THROW(
       {
-        auto* socket_impl = new MockSocketImpl();
+        auto* socket_impl = new MockSocketImpl(0);
         socket_impl->accept_impl = 
-            [&](Address& address, const std::set<Flag::Sock>& flags) -> int {
+            [&](
+                const auto& descriptor,
+                auto* addr, 
+                auto* addr_len,
+                const auto& flags
+            ) -> auto {
               return -2;
             };
         Socket socket(socket_impl);
-        Inet4Address address("127.0.0.1", 80);
+        Inet4Address address;
         socket.Accept(address);
       },
       SocketNonblockingException
@@ -265,22 +378,29 @@ TEST(Socket, accept_throw_nonblocking_exception) {
 }
 
 TEST(Socket, send_no_throw) {
-  auto* socket_impl = new MockSocketImpl();
+  auto* socket_impl = new MockSocketImpl(6);
   socket_impl->send_impl = 
       [&](
-          const void* buffer, 
-          size_t size, 
-          const std::set<Flag::Msg>& flags
+          const auto& descriptor,
+          const auto* buffer, 
+          const auto& buffer_len, 
+          const auto& flags
       ) -> ssize_t {
-        return size;
+        EXPECT_EQ(descriptor, 6);
+        EXPECT_EQ(((char*)buffer)[0], 1);
+        EXPECT_EQ(((char*)buffer)[1], 2);
+        EXPECT_EQ(((char*)buffer)[2], 3);
+        EXPECT_EQ(((char*)buffer)[3], 4);
+        EXPECT_EQ(buffer_len, 4);
+        return 2;
       };
   Socket socket(socket_impl);
-  char buffer[1];
-  auto sent_size = socket.Send(buffer, 1);
-  EXPECT_EQ(socket.descriptor, sent_size);
+  char buffer[4] = { 1, 2, 3, 4 };
+  auto sent_size = socket.Send(buffer, 4);
+  EXPECT_EQ(sent_size, 2);
 }
 
-TEST(Socket, send_throw_connect_exception) {
+TEST(Socket, send_throw_send_exception) {
   EXPECT_THROW(
       {
         Socket socket(-1);
@@ -294,18 +414,72 @@ TEST(Socket, send_throw_connect_exception) {
 TEST(Socket, send_throw_nonblocking_exception) {
   EXPECT_THROW(
       {
-        auto* socket_impl = new MockSocketImpl();
+        auto* socket_impl = new MockSocketImpl(0);
         socket_impl->send_impl = 
             [&](
+                const int& descriptor,
                 const void* buffer, 
-                const size_t& size, 
-                const std::set<Flag::Msg>& flags
-            ) -> ssize_t {
+                const size_t& buffer_len, 
+                const int& flags
+            ) -> auto {
               return -2;
             };
         Socket socket(socket_impl);
         char buffer[1];
         socket.Send(buffer, 1);
+      },
+      SocketNonblockingException
+  );
+}
+
+TEST(Socket, recv_no_throw) {
+  auto* socket_impl = new MockSocketImpl(7);
+  socket_impl->recv_impl = 
+      [&](
+          const auto& descriptor,
+          auto* buffer, 
+          const auto& buffer_len, 
+          const auto& flags
+      ) -> auto {
+        EXPECT_EQ(descriptor, 7);
+        ((char*)buffer)[0] = 2;
+        EXPECT_EQ(buffer_len, 4);
+        return 1;
+      };
+  Socket socket(socket_impl);
+  char buffer[4];
+  auto recv_size = socket.Recv(buffer, 4);
+  EXPECT_EQ(buffer[0], 2);
+  EXPECT_EQ(recv_size, 1);
+}
+
+TEST(Socket, recv_throw_recv_exception) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        char buffer[1];
+        socket.Recv(buffer, 1);
+      },
+      SocketRecvException
+  );
+}
+
+TEST(Socket, recv_throw_nonblocking_exception) {
+  EXPECT_THROW(
+      {
+        auto* socket_impl = new MockSocketImpl(0);
+        socket_impl->recv_impl = 
+            [&](
+                const auto& descriptor,
+                auto* buffer, 
+                const auto& buffer_len, 
+                const auto& flags
+            ) -> auto {
+              return -2;
+            };
+        Socket socket(socket_impl);
+        char buffer[1];
+        socket.Recv(buffer, 1);
       },
       SocketNonblockingException
   );

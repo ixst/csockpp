@@ -19,7 +19,7 @@ class Socket : public ISocket {
 public:
   const int& descriptor;
 
-  static const int kMaxConn;
+  static const uint32_t kMaxConn;
 
 public:
   Socket(SocketImpl* impl) noexcept;
@@ -35,19 +35,24 @@ public:
   ~Socket() noexcept override;
 
 public:
-  void Close() override;
-  void Bind(const Address& address) override;
-  void Listen(const int& backlog = kMaxConn) override;
-  void Connect(const Address& address) override;
+  void Close() const override;
+  void Bind(const Address& address) const override;
+  void Listen(const uint32_t& backlog = kMaxConn) const override;
+  void Connect(const Address& address) const override;
   Socket Accept(
       Address& address, 
       const std::set<Flag::Sock>& flags = {}
-  ) override;
+  ) const override;
   size_t Send(
       const void* buffer, 
-      const size_t& size,
+      const size_t& buffer_len,
       const std::set<Flag::Msg>& flags = {}
-  );
+  ) const override;
+  size_t Recv(
+      void* buffer, 
+      const size_t& buffer_len,
+      const std::set<Flag::Msg>& flags = {}
+  ) const override;
 
 private:
   SocketImpl* impl_;

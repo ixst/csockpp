@@ -19,6 +19,9 @@ public:
   };
 
   enum class Msg {
+#ifdef MSG_CMSG_CLOEXEC
+    kCloseOnExecute = MSG_CMSG_CLOEXEC,
+#endif
 #ifdef MSG_CONFIRM
     kConfirm = MSG_CONFIRM,
 #endif
@@ -28,8 +31,14 @@ public:
 #ifdef MSG_DONTWAIT
     kDontWait = MSG_DONTWAIT,
 #endif
+#ifdef MSG_DONTWAIT
+    kDontWait = MSG_DONTWAIT,
+#endif
 #ifdef MSG_EOR
     kEor = MSG_EOR,
+#endif
+#ifdef MSG_ERRQUEUE
+    kErrorQueue = MSG_ERRQUEUE,
 #endif
 #ifdef MSG_MORE
     kMore = MSG_MORE,
@@ -39,6 +48,12 @@ public:
 #endif
 #ifdef MSG_OOB
     kOob = MSG_OOB,
+#endif
+#ifdef MSG_TRUNC
+    kTruncate = MSG_TRUNC,
+#endif
+#ifdef MSG_WAITALL
+    kWaitAll = MSG_WAITALL,
 #endif
     
   };

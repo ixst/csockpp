@@ -16,30 +16,43 @@ namespace linux_ {
 class SocketOsImpl : public SocketImpl {
 public:
   SocketOsImpl(int descriptor) noexcept;
-  SocketOsImpl(
-      const AddressFamily& af,
-      const Type& type,
-      const Protocol& protocol,
-      const std::set<Flag::Sock>& flags = {}
-  );
-
-public:
-  SocketImpl* clone() const noexcept;
+  SocketOsImpl(const int& af, const int& type, const int& protocol);
 
 private:
-  bool CloseImpl() noexcept override;
-  bool BindImpl(const Address& address) noexcept override;
-  bool ListenImpl(const int& backlog) noexcept override;
-  int ConnectImpl(const Address& address) noexcept override;
+  SocketImpl* CloneImpl(int descriptor) const noexcept override;
+  bool CloseImpl(const int& descriptor) const noexcept override;
+  bool BindImpl(
+      const int& descriptor, 
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  ) const noexcept override;
+  bool ListenImpl(
+      const int& descriptor, 
+      const int& backlog
+  ) const noexcept override;
+  int ConnectImpl(
+      const int& descriptor, 
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  ) const noexcept override;
   int AcceptImpl(
-      Address& address, 
-      const std::set<Flag::Sock>& flags = {}
-  ) noexcept override;
+      const int& descriptor, 
+      struct sockaddr* addr, 
+      socklen_t* addr_len,
+      const int& flags
+  ) const noexcept override;
   ssize_t SendImpl(
+      const int& descriptor, 
       const void* buffer,
-      const size_t& size, 
-      const std::set<Flag::Msg>& flags = {}
-  ) noexcept override;
+      const size_t& buffer_len, 
+      const int& flags
+  ) const noexcept override;
+  ssize_t RecvImpl(
+      const int& descriptor, 
+      void* buffer,
+      const size_t& buffer_len, 
+      const int& flags 
+  ) const noexcept override;
   
 };
 

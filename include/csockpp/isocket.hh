@@ -16,19 +16,24 @@ public:
   virtual ~ISocket() noexcept {};
 
 public:
-  virtual void Close() = 0;
-  virtual void Bind(const Address& address) = 0;
-  virtual void Listen(const int& backlog) = 0;
-  virtual void Connect(const Address& address) = 0;
+  virtual void Close() const = 0;
+  virtual void Bind(const Address& address) const = 0;
+  virtual void Listen(const uint32_t& backlog) const = 0;
+  virtual void Connect(const Address& address) const = 0;
   virtual Socket Accept(
       Address& address, 
       const std::set<Flag::Sock>& flags = {}
-  ) = 0;
+  ) const = 0;
   virtual size_t Send(
       const void* buffer, 
-      const size_t& size, 
+      const size_t& buffer_len, 
       const std::set<Flag::Msg>& flags = {}
-  ) = 0; 
+  ) const = 0;
+  virtual size_t Recv(
+      void* buffer, 
+      const size_t& buffer_len, 
+      const std::set<Flag::Msg>& flags = {}
+  ) const = 0; 
 
 };
 

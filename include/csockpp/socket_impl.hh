@@ -18,38 +18,63 @@ public:
   SocketImpl(int descriptor) noexcept;
 
 public:
-  virtual SocketImpl* clone() const noexcept = 0;
+  SocketImpl* clone() const noexcept;
 
 public:
-  void Close() override;
-  void Bind(const Address& address) override;
-  void Listen(const int& backlog) override;
-  void Connect(const Address& address) override;
+  void Close() const override;
+  void Bind(const Address& address) const override;
+  void Listen(const uint32_t& backlog) const override;
+  void Connect(const Address& address) const override;
   Socket Accept(
       Address& address, 
       const std::set<Flag::Sock>& flags = {}
-  ) override;
+  ) const override;
   size_t Send(
       const void* buffer,
-      const size_t& size, 
+      const size_t& buffer_len, 
       const std::set<Flag::Msg>& flags = {}
-  ) override;
-
+  ) const override;
+  size_t Recv(
+      void* buffer,
+      const size_t& buffer_len, 
+      const std::set<Flag::Msg>& flags = {}
+  ) const override;
 
 private:
-  virtual bool CloseImpl() noexcept = 0;
-  virtual bool BindImpl(const Address& address) noexcept = 0;
-  virtual bool ListenImpl(const int& backlog) noexcept = 0;
-  virtual int ConnectImpl(const Address& address) noexcept = 0;
+  virtual SocketImpl* CloneImpl(int descriptor) const noexcept = 0;
+  virtual bool CloseImpl(const int& descriptor) const noexcept = 0;
+  virtual bool BindImpl(
+      const int& descriptor,
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  ) const noexcept = 0;
+  virtual bool ListenImpl(
+      const int& descriptor, 
+      const int& backlog
+  ) const noexcept = 0;
+  virtual int ConnectImpl(
+      const int& descriptor, 
+      const struct sockaddr* addr, 
+      const socklen_t& addr_len
+  ) const noexcept = 0;
   virtual int AcceptImpl(
-      Address& address, 
-      const std::set<Flag::Sock>& flags = {}
-  ) noexcept = 0;
+      const int& descriptor, 
+      struct sockaddr* addr, 
+      socklen_t* addr_len,
+      const int& flags
+  ) const noexcept = 0;
   virtual ssize_t SendImpl(
+      const int& descriptor, 
       const void* buffer,
-      const size_t& size, 
-      const std::set<Flag::Msg>& flags = {}
-  ) noexcept = 0;
+      const size_t& buffer_len, 
+      const int& flags
+  ) const noexcept = 0;
+  virtual ssize_t RecvImpl(
+      const int& descriptor, 
+      void* buffer,
+      const size_t& buffer_len, 
+      const int& flags
+  ) const noexcept = 0;
   
 };
 

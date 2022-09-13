@@ -11,21 +11,11 @@ namespace linux_ {
 namespace socket_os_impl_internal {
 
 int CreateDescriptor(
-    const AddressFamily& address_family,
-    const Type& type,
-    const Protocol& protocol,
-    const std::set<Flag::Sock>& flags
+    const int& address_family,
+    const int& type,
+    const int& protocol
 ) {
-  int itype = static_cast<int>(type);
-  for (const auto& flag : flags) {
-    itype |= static_cast<int>(flag);
-  }
-
-  auto descriptor = socket(
-      static_cast<int>(address_family),
-      itype,
-      static_cast<int>(protocol)
-  );
+  auto descriptor = socket(address_family, type, protocol);
   if (descriptor != -1) {
     return descriptor;
   }
@@ -39,39 +29,48 @@ SocketOsImpl::SocketOsImpl(int descriptor) noexcept
 {}
 
 SocketOsImpl::SocketOsImpl(
-    const AddressFamily& address_family,
-    const Type& type,
-    const Protocol& protocol,
-    const std::set<Flag::Sock>& flags
+    const int& address_family,
+    const int& type,
+    const int& protocol
 ) 
     : SocketOsImpl(
           socket_os_impl_internal::CreateDescriptor(
               address_family, 
               type, 
-              protocol,
-              flags
+              protocol
           )
       )
 {}
 
-SocketImpl* SocketOsImpl::clone() const noexcept {
+SocketImpl* SocketOsImpl::CloneImpl(int descriptor) const noexcept {
   return new SocketOsImpl(descriptor);
 }
 
-bool SocketOsImpl::CloseImpl() noexcept {
+bool SocketOsImpl::CloseImpl(const int& descriptor) const noexcept {
   return close(descriptor) == 0;
 }
 
-bool SocketOsImpl::BindImpl(const Address& address) noexcept {
-  return bind(descriptor, &address.addr, address.size) == 0;
+bool SocketOsImpl::BindImpl(
+    const int& descriptor, 
+    const struct sockaddr* addr, 
+    const socklen_t& addr_len
+) const noexcept {
+  return bind(descriptor, addr, addr_len) == 0;
 }
 
-bool SocketOsImpl::ListenImpl(const int& backlog) noexcept {
+bool SocketOsImpl::ListenImpl(
+    const int& descriptor, 
+    const int& backlog
+) const noexcept {
   return listen(descriptor, backlog) == 0;
 }
 
-int SocketOsImpl::ConnectImpl(const Address& address) noexcept {
-  if (connect(descriptor, &address.addr, address.size) == 0) {
+int SocketOsImpl::ConnectImpl(
+    const int& descriptor, 
+    const struct sockaddr* addr, 
+    const socklen_t& addr_len
+) const noexcept {
+  if (connect(descriptor, addr, addr_len) == 0) {
     return 0;
   } else if (
 #ifdef EWOULDBLOCK
@@ -92,22 +91,12 @@ int SocketOsImpl::ConnectImpl(const Address& address) noexcept {
 }
 
 int SocketOsImpl::AcceptImpl(
-    Address& address, 
-    const std::set<Flag::Sock>& flags
-) noexcept {
-  int iflags = 0;
-  for (const auto& flag : flags) {
-    iflags |= static_cast<int>(flag);
-  }
- 
-  if (
-      accept4(
-          descriptor, 
-          &address.addr, 
-          const_cast<socklen_t*>(&address.size),
-          iflags
-      ) == 0
-  ) {
+    const int& descriptor, 
+    struct sockaddr* addr, 
+    socklen_t* addr_len,
+    const int& flags
+) const noexcept {
+  if (accept4(descriptor, addr, addr_len, flags) == 0) {
     return 0;
   } else if (
 #ifdef EWOULDBLOCK
@@ -125,18 +114,38 @@ int SocketOsImpl::AcceptImpl(
 }
 
 ssize_t SocketOsImpl::SendImpl(
+    const int& descriptor, 
     const void* buffer, 
-    const size_t& size,
-    const std::set<Flag::Msg>& flags
-) noexcept {
-  int iflags = 0;
-  for (const auto& flag : flags) {
-    iflags |= static_cast<int>(flag);
-  }
-  
-  auto sent_size = send(descriptor, buffer, size, iflags);
+    const size_t& buffer_len,
+    const int& flags
+) const noexcept {
+  auto sent_size = send(descriptor, buffer, buffer_len, flags);
   if (sent_size != -1) {
     return sent_size;
+  } else if (
+#ifdef EWOULDBLOCK
+      errno == EWOULDBLOCK ||
+#endif
+#ifdef EAGAIN
+      errno == EAGAIN ||
+#endif
+      false
+  ) {
+    return -2;
+  } else {
+    return -1;
+  }
+}
+
+ssize_t SocketOsImpl::RecvImpl(
+    const int& descriptor, 
+    void* buffer, 
+    const size_t& buffer_len,
+    const int& flags
+) const noexcept {
+  auto recv_size = recv(descriptor, buffer, buffer_len, flags);
+  if (recv_size != -1) {
+    return recv_size;
   } else if (
 #ifdef EWOULDBLOCK
       errno == EWOULDBLOCK ||
