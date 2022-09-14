@@ -161,5 +161,38 @@ ssize_t SocketOsImpl::RecvImpl(
   }
 }
 
+ssize_t SocketOsImpl::SendToImpl(
+    const int& descriptor, 
+    const void* buffer,
+    const size_t& buffer_len, 
+    const int& flags,
+    const struct sockaddr* addr,
+    const socklen_t& addr_len
+) const noexcept {
+  auto sent_size = sendto(
+      descriptor, 
+      buffer, 
+      buffer_len, 
+      flags,
+      addr, 
+      addr_len
+  );
+  if (sent_size != -1) {
+    return sent_size;
+  } else if (
+#ifdef EWOULDBLOCK
+      errno == EWOULDBLOCK ||
+#endif
+#ifdef EAGAIN
+      errno == EAGAIN ||
+#endif
+      false
+  ) {
+    return -2;
+  } else {
+    return -1;
+  }
+}
+
 }
 }

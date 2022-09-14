@@ -50,6 +50,14 @@ public:
       const size_t& buffer_len,
       const int& flags
   )> recv_impl;
+  std::function<ssize_t(
+      const int& descriptor,
+      const void* buffer, 
+      const size_t& buffer_len,
+      const int& flags,
+      const struct sockaddr* addr,
+      const socklen_t& addr_len
+  )> sendto_impl;
 
 
 public:
@@ -134,6 +142,27 @@ public:
   ) const noexcept override {
     if (recv_impl) {
       return recv_impl(descriptor, buffer, buffer_len, flags);
+    }
+    return 0;
+  }
+
+  ssize_t SendToImpl(
+      const int& descriptor,
+      const void* buffer,
+      const size_t& buffer_len, 
+      const int& flags,
+      const struct sockaddr* addr,
+      const socklen_t& addr_len
+  ) const noexcept override {
+    if (sendto_impl) {
+      return sendto_impl(
+          descriptor, 
+          buffer, 
+          buffer_len, 
+          flags, 
+          addr, 
+          addr_len
+      );
     }
     return 0;
   }
@@ -480,6 +509,70 @@ TEST(Socket, recv_throw_nonblocking_exception) {
         Socket socket(socket_impl);
         char buffer[1];
         socket.Recv(buffer, 1);
+      },
+      SocketNonblockingException
+  );
+}
+
+TEST(Socket, sendto_no_throw) {
+  Inet4Address address("127.0.0.1", 80);
+  auto* socket_impl = new MockSocketImpl(8);
+  socket_impl->sendto_impl = 
+      [&](
+          const auto& descriptor,
+          const auto* buffer, 
+          const auto& buffer_len, 
+          const auto& flags,
+          const struct sockaddr* addr,
+          const socklen_t& addr_len
+      ) -> ssize_t {
+        EXPECT_EQ(descriptor, 8);
+        EXPECT_EQ(addr_len, address.size);
+        EXPECT_EQ(std::memcmp(addr, &address.addr, addr_len), 0);
+        EXPECT_EQ(((char*)buffer)[0], 1);
+        EXPECT_EQ(((char*)buffer)[1], 2);
+        EXPECT_EQ(((char*)buffer)[2], 3);
+        EXPECT_EQ(((char*)buffer)[3], 4);
+        EXPECT_EQ(buffer_len, 4);
+        return 3;
+      };
+  Socket socket(socket_impl);
+  char buffer[4] = { 1, 2, 3, 4 };
+  auto sent_size = socket.SendTo(buffer, 4, address);
+  EXPECT_EQ(sent_size, 3);
+}
+
+TEST(Socket, sendto_throw_send_exception) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        char buffer[1];
+        Inet4Address address("127.0.0.1", 80);
+        socket.SendTo(buffer, 1, address);
+      },
+      SocketSendException
+  );
+}
+
+TEST(Socket, sendto_throw_nonblocking_exception) {
+  EXPECT_THROW(
+      {
+        auto* socket_impl = new MockSocketImpl(0);
+        socket_impl->sendto_impl = 
+            [&](
+                const int& descriptor,
+                const void* buffer, 
+                const size_t& buffer_len, 
+                const int& flags,
+                const struct sockaddr* addr,
+                const socklen_t& addr_len
+            ) -> auto {
+              return -2;
+            };
+        Socket socket(socket_impl);
+        char buffer[1];
+        Inet4Address address("127.0.0.1", 80);
+        socket.SendTo(buffer, 1, address);
       },
       SocketNonblockingException
   );

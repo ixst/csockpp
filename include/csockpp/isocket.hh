@@ -33,7 +33,13 @@ public:
       void* buffer, 
       const size_t& buffer_len, 
       const std::set<Flag::Msg>& flags = {}
-  ) const = 0; 
+  ) const = 0;
+  virtual size_t SendTo(
+      const void* buffer, 
+      const size_t& buffer_len, 
+      const Address& address,
+      const std::set<Flag::Msg>& flags = {}
+  ) const = 0;
 
 };
 

@@ -53,6 +53,14 @@ private:
       const size_t& buffer_len, 
       const int& flags 
   ) const noexcept override;
+  ssize_t SendToImpl(
+      const int& descriptor, 
+      const void* buffer,
+      const size_t& buffer_len, 
+      const int& flags,
+      const struct sockaddr* addr,
+      const socklen_t& addr_len
+  ) const noexcept override;
   
 };
 

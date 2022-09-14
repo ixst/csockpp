@@ -39,6 +39,12 @@ public:
       const size_t& buffer_len, 
       const std::set<Flag::Msg>& flags = {}
   ) const override;
+  size_t SendTo(
+      const void* buffer,
+      const size_t& buffer_len, 
+      const Address& address,
+      const std::set<Flag::Msg>& flags = {}
+  ) const override;
 
 private:
   virtual SocketImpl* CloneImpl(int descriptor) const noexcept = 0;
@@ -74,6 +80,14 @@ private:
       void* buffer,
       const size_t& buffer_len, 
       const int& flags
+  ) const noexcept = 0;
+  virtual ssize_t SendToImpl(
+      const int& descriptor, 
+      const void* buffer,
+      const size_t& buffer_len, 
+      const int& flags,
+      const struct sockaddr* addr,
+      const socklen_t& addr_len
   ) const noexcept = 0;
   
 };

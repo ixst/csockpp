@@ -53,6 +53,12 @@ public:
       const size_t& buffer_len,
       const std::set<Flag::Msg>& flags = {}
   ) const override;
+  size_t SendTo(
+      const void* buffer, 
+      const size_t& buffer_len,
+      const Address& address,
+      const std::set<Flag::Msg>& flags = {}
+  ) const override;
 
 private:
   SocketImpl* impl_;

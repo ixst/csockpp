@@ -31,9 +31,6 @@ public:
 #ifdef MSG_DONTWAIT
     kDontWait = MSG_DONTWAIT,
 #endif
-#ifdef MSG_DONTWAIT
-    kDontWait = MSG_DONTWAIT,
-#endif
 #ifdef MSG_EOR
     kEor = MSG_EOR,
 #endif

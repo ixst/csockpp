@@ -105,4 +105,13 @@ size_t Socket::Recv(
   return impl_->Recv(buffer, buffer_len, flags);
 }
 
+size_t Socket::SendTo(
+    const void* buffer, 
+    const size_t& buffer_len,
+    const Address& address,
+    const std::set<Flag::Msg>& flags
+) const {
+  return impl_->SendTo(buffer, buffer_len, address, flags);
+}
+
 }
