@@ -17,6 +17,10 @@ using namespace csockpp;
 
 class MockSocketImpl : public SocketImpl {
 public:
+  std::function<bool(
+      const int& descriptor,
+      const int& how
+  )> shutdown_impl;
   std::function<bool(const int& descriptor)> close_impl;
   std::function<bool(
       const int& descriptor,
@@ -78,7 +82,15 @@ public:
     return new MockSocketImpl(descriptor);
   }
 
-public:
+  bool ShutdownImpl(
+      const int& descriptor, 
+      const int& how
+  ) const noexcept override {
+    if (shutdown_impl) {
+      return shutdown_impl(descriptor, how);
+    }
+    return true;
+  }
   bool CloseImpl(const int& descriptor) const noexcept override {
     if (close_impl) {
       return close_impl(descriptor);
@@ -227,6 +239,58 @@ TEST(Socket, constructor_throw) {
         Socket socket(AddressFamily::kInet, Type::kStream, Protocol::kUdp);
       }, 
       SocketOpenException
+  );
+}
+
+TEST(Socket, shutdown_no_throw) {
+  EXPECT_NO_THROW(
+      {
+        auto* socket_impl = new MockSocketImpl(2);
+        socket_impl->shutdown_impl = 
+            [&](const auto& descriptor, const auto& how) -> bool {
+              EXPECT_EQ(descriptor, 2);
+              EXPECT_EQ(how, SHUT_RDWR);
+              return true;
+            };
+        Socket socket(socket_impl);
+        socket.Shutdown();
+      }
+  );
+}
+
+TEST(Socket, shutdown_throw) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        socket.Shutdown();
+      }, 
+      SocketShutdownException
+  );
+}
+
+TEST(Socket, shutdown_with_how_no_throw) {
+  EXPECT_NO_THROW(
+      {
+        auto* socket_impl = new MockSocketImpl(2);
+        socket_impl->shutdown_impl = 
+            [&](const auto& descriptor, const auto& how) {
+              EXPECT_EQ(descriptor, 2);
+              EXPECT_EQ(how, SHUT_RD);
+              return true;
+            };
+        Socket socket(socket_impl);
+        socket.Shutdown(Flag::Shut::kRecv);
+      }
+  );
+}
+
+TEST(Socket, shutdown_with_how_throw) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        socket.Shutdown(Flag::Shut::kSend);
+      }, 
+      SocketShutdownException
   );
 }
 

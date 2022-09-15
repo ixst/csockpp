@@ -59,6 +59,13 @@ SocketImpl* SocketOsImpl::CloneImpl(int descriptor) const noexcept {
   return new SocketOsImpl(descriptor);
 }
 
+bool SocketOsImpl::ShutdownImpl(
+    const int& descriptor, 
+    const int& how
+) const noexcept {
+  return shutdown(descriptor, how) == 0;
+}
+
 bool SocketOsImpl::CloseImpl(const int& descriptor) const noexcept {
   return close(descriptor) == 0;
 }
@@ -86,7 +93,7 @@ int SocketOsImpl::ConnectImpl(
   if (connect(descriptor, addr, addr_len) == 0) {
     return 0;
   }
-  if(
+  if (
 #ifdef EINPROGRESS
       errno == EINPROGRESS ||
 #endif
@@ -106,7 +113,7 @@ int SocketOsImpl::AcceptImpl(
   if (accept4(descriptor, addr, addr_len, flags) == 0) {
     return 0;
   }
-  if(socket_os_impl_internal::IsNonblockingError(errno)) {
+  if (socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
   }
   return -1;
@@ -122,7 +129,7 @@ ssize_t SocketOsImpl::SendImpl(
   if (sent_size != -1) {
     return sent_size;
   } 
-  if(socket_os_impl_internal::IsNonblockingError(errno)) {
+  if (socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
   }
   return -1;
@@ -138,7 +145,7 @@ ssize_t SocketOsImpl::RecvImpl(
   if (recv_size != -1) {
     return recv_size;
   } 
-  if(socket_os_impl_internal::IsNonblockingError(errno)) {
+  if (socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
   }
   return -1;
@@ -163,7 +170,7 @@ ssize_t SocketOsImpl::SendToImpl(
   if (sent_size != -1) {
     return sent_size;
   } 
-  if(socket_os_impl_internal::IsNonblockingError(errno)) {
+  if (socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
   }
   return -1;
@@ -188,7 +195,7 @@ ssize_t SocketOsImpl::RecvFromImpl(
   if (recv_size != -1) {
     return recv_size;
   } 
-  if(socket_os_impl_internal::IsNonblockingError(errno)) {
+  if (socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
   }
   return -1;

@@ -20,6 +20,10 @@ public:
 
 private:
   SocketImpl* CloneImpl(int descriptor) const noexcept override;
+  bool ShutdownImpl(
+      const int& descriptor, 
+      const int& how
+  ) const noexcept override;
   bool CloseImpl(const int& descriptor) const noexcept override;
   bool BindImpl(
       const int& descriptor, 

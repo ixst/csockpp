@@ -21,6 +21,8 @@ public:
   SocketImpl* clone() const noexcept;
 
 public:
+  void Shutdown() const override;
+  void Shutdown(Flag::Shut how) const override;
   void Close() const override;
   void Bind(const Address& address) const override;
   void Listen(const uint32_t& backlog) const override;
@@ -54,6 +56,10 @@ public:
 
 private:
   virtual SocketImpl* CloneImpl(int descriptor) const noexcept = 0;
+  virtual bool ShutdownImpl(
+      const int& descriptor, 
+      const int& how
+  ) const noexcept = 0;
   virtual bool CloseImpl(const int& descriptor) const noexcept = 0;
   virtual bool BindImpl(
       const int& descriptor,

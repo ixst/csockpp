@@ -1,5 +1,7 @@
 #include "csockpp/socket_impl.hh"
 
+#include <sys/socket.h>
+
 #include "csockpp/exception.hh"
 #include "csockpp/socket.hh"
 
@@ -11,7 +13,7 @@ namespace socket_impl_internal {
 template <class T>
 int CalcFlags(const std::set<T>& flags) noexcept {
   int ret = 0;
-  for(const auto& flag : flags) {
+  for (const auto& flag : flags) {
     ret |= static_cast<int>(flag);
   }
   return ret;
@@ -25,6 +27,19 @@ SocketImpl::SocketImpl(int descriptor) noexcept
 
 SocketImpl* SocketImpl::clone() const noexcept {
   return CloneImpl(descriptor);
+}
+
+void SocketImpl::Shutdown() const {
+  if (!ShutdownImpl(descriptor, SHUT_RDWR)) {
+    throw SocketShutdownException();
+  }
+}
+
+void SocketImpl::Shutdown(Flag::Shut flag) const {
+  int how = flag == Flag::Shut::kRecv ? SHUT_RD : SHUT_WR;
+  if (!ShutdownImpl(descriptor, how)) {
+    throw SocketShutdownException();
+  }
 }
 
 void SocketImpl::Close() const {

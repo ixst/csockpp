@@ -55,6 +55,16 @@ public:
     
   };
 
+  enum class Shut {
+#ifdef SHUT_RD
+    kRecv = SHUT_RD,
+#endif
+#ifdef SHUT_RD
+    kSend = SHUT_WR,
+#endif
+
+  };
+
 };
 
 }

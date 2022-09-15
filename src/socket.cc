@@ -13,7 +13,7 @@ namespace socket_internal {
 
 int CalcType(const Type& type, const std::set<Flag::Sock>& flags) noexcept {
   int ret = static_cast<int>(type);
-  for(const auto& flag : flags) {
+  for (const auto& flag : flags) {
     ret |= static_cast<int>(flag);
   }
   return ret;
@@ -64,6 +64,14 @@ Socket::Socket(Socket&& socket) noexcept
 
 Socket::~Socket() noexcept {
   delete impl_;
+}
+
+void Socket::Shutdown() const {
+  impl_->Shutdown();
+}
+
+void Socket::Shutdown(Flag::Shut how) const {
+  impl_->Shutdown(how);
 }
 
 void Socket::Close() const {

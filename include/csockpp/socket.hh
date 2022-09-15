@@ -35,6 +35,8 @@ public:
   ~Socket() noexcept override;
 
 public:
+  void Shutdown() const override;
+  void Shutdown(Flag::Shut how) const override;
   void Close() const override;
   void Bind(const Address& address) const override;
   void Listen(const uint32_t& backlog = kMaxConn) const override;

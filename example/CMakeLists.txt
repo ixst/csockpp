@@ -1,4 +1,4 @@
-file(GLOB_RECURSE TCP_CLIENT_SOCKET_SOURCE *.cc)
+file(GLOB_RECURSE TCP_CLIENT_SOCKET_SOURCE tcp_client_socket.cc)
 
 add_executable(tcp_client_socket ${TCP_CLIENT_SOCKET_SOURCE})
 

@@ -16,6 +16,8 @@ public:
   virtual ~ISocket() noexcept {};
 
 public:
+  virtual void Shutdown() const = 0;
+  virtual void Shutdown(Flag::Shut how) const = 0;
   virtual void Close() const = 0;
   virtual void Bind(const Address& address) const = 0;
   virtual void Listen(const uint32_t& backlog) const = 0;

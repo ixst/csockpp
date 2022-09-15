@@ -20,11 +20,9 @@ public:
 };
 
 class SocketException : public SystemException {};
-
 class SocketOpenException : public SocketException {};
-
+class SocketShutdownException : public SocketException {};
 class SocketCloseException : public SocketException {};
-
 class SocketBindException : public SocketException {};
 class SocketListenException : public SocketException {};
 class SocketConnectException : public SocketException {};
