@@ -58,6 +58,14 @@ public:
       const struct sockaddr* addr,
       const socklen_t& addr_len
   )> sendto_impl;
+  std::function<ssize_t(
+      const int& descriptor,
+      void* buffer, 
+      const size_t& buffer_len,
+      const int& flags,
+      struct sockaddr* addr,
+      socklen_t* addr_len
+  )> recvfrom_impl;
 
 
 public:
@@ -156,6 +164,27 @@ public:
   ) const noexcept override {
     if (sendto_impl) {
       return sendto_impl(
+          descriptor, 
+          buffer, 
+          buffer_len, 
+          flags, 
+          addr, 
+          addr_len
+      );
+    }
+    return 0;
+  }
+
+  ssize_t RecvFromImpl(
+      const int& descriptor,
+      void* buffer,
+      const size_t& buffer_len, 
+      const int& flags,
+      struct sockaddr* addr,
+      socklen_t* addr_len
+  ) const noexcept override {
+    if (recvfrom_impl) {
+      return recvfrom_impl(
           descriptor, 
           buffer, 
           buffer_len, 
@@ -573,6 +602,70 @@ TEST(Socket, sendto_throw_nonblocking_exception) {
         char buffer[1];
         Inet4Address address("127.0.0.1", 80);
         socket.SendTo(buffer, 1, address);
+      },
+      SocketNonblockingException
+  );
+}
+
+TEST(Socket, recvfrom_no_throw) {
+  Inet4Address src;
+  auto* socket_impl = new MockSocketImpl(9);
+  socket_impl->recvfrom_impl = 
+      [&](
+          const auto& descriptor,
+          auto* buffer, 
+          const auto& buffer_len, 
+          const auto& flags,
+          auto* addr,
+          auto* addr_len
+      ) -> auto {
+        *addr_len = src.size;
+        std::memcpy(addr, &src.addr, src.size);
+        EXPECT_EQ(descriptor, 9);
+        ((char*)buffer)[0] = 3;
+        EXPECT_EQ(buffer_len, 4);
+        return 2;
+      };
+  Socket socket(socket_impl);
+  char buffer[4];
+  Inet4Address dst;
+  auto recv_size = socket.RecvFrom(buffer, 4, dst);
+  EXPECT_EQ(buffer[0], 3);
+  EXPECT_EQ(recv_size, 2);
+  EXPECT_EQ(src, dst);
+}
+
+TEST(Socket, recvfrom_throw_recv_exception) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        char buffer[1];
+        Inet4Address address;
+        socket.RecvFrom(buffer, 1, address);
+      },
+      SocketRecvException
+  );
+}
+
+TEST(Socket, recvfrom_throw_nonblocking_exception) {
+  EXPECT_THROW(
+      {
+        auto* socket_impl = new MockSocketImpl(0);
+        socket_impl->recvfrom_impl = 
+            [&](
+                const auto& descriptor,
+                auto* buffer, 
+                const auto& buffer_len, 
+                const auto& flags,
+                auto* addr,
+                auto* addr_len
+            ) -> auto {
+              return -2;
+            };
+        Socket socket(socket_impl);
+        char buffer[1];
+        Inet4Address address;
+        socket.RecvFrom(buffer, 1, address);
       },
       SocketNonblockingException
   );

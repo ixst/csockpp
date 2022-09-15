@@ -133,4 +133,25 @@ size_t SocketImpl::SendTo(
   }
 }
 
+size_t SocketImpl::RecvFrom(
+    void* buffer, 
+    const size_t& buffer_len, 
+    Address& address,
+    const std::set<Flag::Msg>& flags
+) const {
+  auto recv_size = RecvFromImpl(
+      descriptor,
+      buffer, 
+      buffer_len,
+      socket_impl_internal::CalcFlags(flags),
+      &address.addr,
+      const_cast<socklen_t*>(&address.size)
+  );
+  switch (recv_size) {
+    case -1: throw SocketRecvException();
+    case -2: throw SocketNonblockingException();
+    default: return static_cast<size_t>(recv_size);
+  }
+}
+
 }

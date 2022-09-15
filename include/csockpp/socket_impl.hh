@@ -45,6 +45,12 @@ public:
       const Address& address,
       const std::set<Flag::Msg>& flags = {}
   ) const override;
+  size_t RecvFrom(
+      void* buffer,
+      const size_t& buffer_len,
+      Address& address,
+      const std::set<Flag::Msg>& flags = {}
+  ) const override;
 
 private:
   virtual SocketImpl* CloneImpl(int descriptor) const noexcept = 0;
@@ -88,6 +94,14 @@ private:
       const int& flags,
       const struct sockaddr* addr,
       const socklen_t& addr_len
+  ) const noexcept = 0;
+  virtual ssize_t RecvFromImpl(
+      const int& descriptor, 
+      void* buffer,
+      const size_t& buffer_len,
+      const int& flags,
+      sockaddr* addr,
+      socklen_t* addr_len
   ) const noexcept = 0;
   
 };

@@ -23,9 +23,6 @@ public:
   
   std::string str() const noexcept override;
 
-public:
-  bool operator==(const struct sockaddr_in& addr) const noexcept;
-
 private:
   struct sockaddr_in& addr_in_;
  

@@ -59,6 +59,12 @@ public:
       const Address& address,
       const std::set<Flag::Msg>& flags = {}
   ) const override;
+  size_t RecvFrom(
+      void* buffer,
+      const size_t& buffer_len,
+      Address& address,
+      const std::set<Flag::Msg>& flags = {}
+  ) const override;
 
 private:
   SocketImpl* impl_;

@@ -76,14 +76,5 @@ TEST(Inet4Address, stream_out) {
   EXPECT_EQ(sout.str(), "127.0.0.1:80");
 }
 
-TEST(Inet4Address, operator_equal_to_sockaddr) {
-  struct sockaddr_in addr = {};
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(mock_port);
-  inet_pton(AF_INET, mock_ip.c_str(), &addr.sin_addr);
-
-  EXPECT_EQ(Inet4Address(mock_ip, mock_port), addr);
-}
-
 }
 }

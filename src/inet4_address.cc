@@ -64,8 +64,4 @@ std::string Inet4Address::str() const noexcept {
   return sout.str();
 }
 
-bool Inet4Address::operator==(const struct sockaddr_in& addr) const noexcept {
-  return std::memcmp(&addr_in_, &data_, sizeof(addr));
-}
-
 }

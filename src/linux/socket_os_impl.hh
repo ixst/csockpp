@@ -61,6 +61,14 @@ private:
       const struct sockaddr* addr,
       const socklen_t& addr_len
   ) const noexcept override;
+  ssize_t RecvFromImpl(
+      const int& descriptor, 
+      void* buffer,
+      const size_t& buffer_len,
+      const int& flags,
+      sockaddr* addr,
+      socklen_t* addr_len
+  ) const noexcept override;
   
 };
 

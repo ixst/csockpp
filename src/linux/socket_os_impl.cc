@@ -1,5 +1,7 @@
 #include "socket_os_impl.hh"
 
+#include <cerrno>
+
 #include <unistd.h>
 
 #include "csockpp/exception.hh"
@@ -20,6 +22,17 @@ int CreateDescriptor(
     return descriptor;
   }
   throw SocketOpenException();
+}
+
+bool IsNonblockingError(const int& error) noexcept {
+  return 
+#ifdef EWOULDBLOCK
+      errno == EWOULDBLOCK ||
+#endif
+#ifdef EAGAIN
+      errno == EAGAIN ||
+#endif
+      false;
 }
 
 }
@@ -72,22 +85,16 @@ int SocketOsImpl::ConnectImpl(
 ) const noexcept {
   if (connect(descriptor, addr, addr_len) == 0) {
     return 0;
-  } else if (
-#ifdef EWOULDBLOCK
-      errno == EWOULDBLOCK ||
-#endif
-#ifdef EAGAIN
-      errno == EAGAIN ||
-#endif
+  }
+  if(
 #ifdef EINPROGRESS
       errno == EINPROGRESS ||
 #endif
-      false
+      socket_os_impl_internal::IsNonblockingError(errno)
   ) {
     return -2;
-  } else {
-    return -1;
   }
+  return -1;
 }
 
 int SocketOsImpl::AcceptImpl(
@@ -98,19 +105,11 @@ int SocketOsImpl::AcceptImpl(
 ) const noexcept {
   if (accept4(descriptor, addr, addr_len, flags) == 0) {
     return 0;
-  } else if (
-#ifdef EWOULDBLOCK
-      errno == EWOULDBLOCK ||
-#endif
-#ifdef EAGAIN
-      errno == EAGAIN ||
-#endif
-      false
-  ) {
-    return -2;
-  } else {
-    return -1;
   }
+  if(socket_os_impl_internal::IsNonblockingError(errno)) {
+    return -2;
+  }
+  return -1;
 }
 
 ssize_t SocketOsImpl::SendImpl(
@@ -122,19 +121,11 @@ ssize_t SocketOsImpl::SendImpl(
   auto sent_size = send(descriptor, buffer, buffer_len, flags);
   if (sent_size != -1) {
     return sent_size;
-  } else if (
-#ifdef EWOULDBLOCK
-      errno == EWOULDBLOCK ||
-#endif
-#ifdef EAGAIN
-      errno == EAGAIN ||
-#endif
-      false
-  ) {
+  } 
+  if(socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
-  } else {
-    return -1;
   }
+  return -1;
 }
 
 ssize_t SocketOsImpl::RecvImpl(
@@ -146,19 +137,11 @@ ssize_t SocketOsImpl::RecvImpl(
   auto recv_size = recv(descriptor, buffer, buffer_len, flags);
   if (recv_size != -1) {
     return recv_size;
-  } else if (
-#ifdef EWOULDBLOCK
-      errno == EWOULDBLOCK ||
-#endif
-#ifdef EAGAIN
-      errno == EAGAIN ||
-#endif
-      false
-  ) {
+  } 
+  if(socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
-  } else {
-    return -1;
   }
+  return -1;
 }
 
 ssize_t SocketOsImpl::SendToImpl(
@@ -179,19 +162,36 @@ ssize_t SocketOsImpl::SendToImpl(
   );
   if (sent_size != -1) {
     return sent_size;
-  } else if (
-#ifdef EWOULDBLOCK
-      errno == EWOULDBLOCK ||
-#endif
-#ifdef EAGAIN
-      errno == EAGAIN ||
-#endif
-      false
-  ) {
+  } 
+  if(socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;
-  } else {
-    return -1;
   }
+  return -1;
+}
+
+ssize_t SocketOsImpl::RecvFromImpl(
+    const int& descriptor, 
+    void* buffer,
+    const size_t& buffer_len,
+    const int& flags,
+    sockaddr* addr,
+    socklen_t* addr_len
+) const noexcept {
+  auto recv_size = recvfrom(
+      descriptor, 
+      buffer, 
+      buffer_len, 
+      flags, 
+      addr, 
+      addr_len
+  );
+  if (recv_size != -1) {
+    return recv_size;
+  } 
+  if(socket_os_impl_internal::IsNonblockingError(errno)) {
+    return -2;
+  }
+  return -1;
 }
 
 }
