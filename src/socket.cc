@@ -90,6 +90,10 @@ void Socket::Connect(const Address& address) const {
   return impl_->Connect(address);
 }
 
+Socket Socket::Accept(const std::set<Flag::Sock>& flags) const {
+  return impl_->Accept(flags);
+}
+
 Socket Socket::Accept(
     Address& address, 
     const std::set<Flag::Sock>& flags

@@ -22,6 +22,7 @@ public:
   virtual void Bind(const Address& address) const = 0;
   virtual void Listen(const uint32_t& backlog) const = 0;
   virtual void Connect(const Address& address) const = 0;
+  virtual Socket Accept(const std::set<Flag::Sock>& flags = {}) const = 0;
   virtual Socket Accept(
       Address& address, 
       const std::set<Flag::Sock>& flags = {}

@@ -27,6 +27,7 @@ public:
   void Bind(const Address& address) const override;
   void Listen(const uint32_t& backlog) const override;
   void Connect(const Address& address) const override;
+  Socket Accept(const std::set<Flag::Sock>& flags = {}) const override;
   Socket Accept(
       Address& address, 
       const std::set<Flag::Sock>& flags = {}

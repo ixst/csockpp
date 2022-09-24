@@ -436,6 +436,62 @@ TEST(Socket, connect_throw_connection_exception) {
 
 TEST(Socket, accept_no_throw) {
   auto* socket_impl = new MockSocketImpl(5);
+  socket_impl->accept_impl = 
+      [&](
+          const auto& descriptor,
+          auto* addr, 
+          auto* addr_len,
+          const auto& flags
+      ) -> auto {
+        EXPECT_EQ(descriptor, 5);
+        EXPECT_EQ(
+            flags,
+            (
+                static_cast<int>(Flag::Sock::kNonblock) | 
+                static_cast<int>(Flag::Sock::kCloseOnExecute)
+            )
+        );
+        return 99;
+      };
+  Socket socket(socket_impl);
+  auto accepted = socket.Accept(
+      { Flag::Sock::kNonblock, Flag::Sock::kCloseOnExecute }
+  );
+  EXPECT_EQ(accepted.descriptor, 99);
+}
+
+TEST(Socket, accept_throw_accept_exception) {
+  EXPECT_THROW(
+      {
+        Socket socket(-1);
+        socket.Accept();
+      },
+      SocketAcceptException
+  );
+}
+
+TEST(Socket, accept_throw_nonblocking_exception) {
+  EXPECT_THROW(
+      {
+        auto* socket_impl = new MockSocketImpl(0);
+        socket_impl->accept_impl = 
+            [&](
+                const auto& descriptor,
+                auto* addr, 
+                auto* addr_len,
+                const auto& flags
+            ) -> auto {
+              return -2;
+            };
+        Socket socket(socket_impl);
+        socket.Accept();
+      },
+      SocketNonblockingException
+  );
+}
+
+TEST(Socket, accept_with_address_no_throw) {
+  auto* socket_impl = new MockSocketImpl(5);
   Inet6Address src("::1", 80);
   socket_impl->accept_impl = 
       [&](
@@ -467,7 +523,9 @@ TEST(Socket, accept_no_throw) {
   EXPECT_EQ(std::memcmp(&dst.addr, &src.addr, src.size), 0);
 }
 
-TEST(Socket, accept_throw_accept_exception) {
+
+
+TEST(Socket, accept_with_address_throw_accept_exception) {
   EXPECT_THROW(
       {
         Socket socket(-1);
@@ -478,7 +536,7 @@ TEST(Socket, accept_throw_accept_exception) {
   );
 }
 
-TEST(Socket, accept_throw_nonblocking_exception) {
+TEST(Socket, accept_with_address_throw_nonblocking_exception) {
   EXPECT_THROW(
       {
         auto* socket_impl = new MockSocketImpl(0);

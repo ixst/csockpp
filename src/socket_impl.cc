@@ -74,6 +74,20 @@ void SocketImpl::Connect(const Address& address) const {
   }
 }
 
+Socket SocketImpl::Accept(const std::set<Flag::Sock>& flags) const {
+  auto accepted = AcceptImpl(
+      descriptor,
+      nullptr, 
+      nullptr, 
+      socket_impl_internal::CalcFlags(flags)    
+  );
+  switch (accepted) {
+    case -1: throw SocketAcceptException();
+    case -2: throw SocketNonblockingException();
+    default: return Socket(accepted);
+  }
+}
+
 Socket SocketImpl::Accept(
     Address& address, 
     const std::set<Flag::Sock>& flags
@@ -82,7 +96,7 @@ Socket SocketImpl::Accept(
       descriptor,
       &address.addr, 
       const_cast<socklen_t*>(&address.size), 
-      socket_impl_internal::CalcFlags(flags)    
+      socket_impl_internal::CalcFlags(flags)
   );
   switch (accepted) {
     case -1: throw SocketAcceptException();
