@@ -110,8 +110,9 @@ int SocketOsImpl::AcceptImpl(
     socklen_t* addr_len,
     const int& flags
 ) const noexcept {
-  if (accept4(descriptor, addr, addr_len, flags) == 0) {
-    return 0;
+  auto accepted = accept4(descriptor, addr, addr_len, flags);
+  if (accepted != -1) {
+    return accepted;
   }
   if (socket_os_impl_internal::IsNonblockingError(errno)) {
     return -2;

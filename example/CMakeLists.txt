@@ -1,5 +1,11 @@
-file(GLOB_RECURSE TCP_CLIENT_SOCKET_SOURCE tcp_client_socket.cc)
+set(
+    EXAMPLES
+    tcp_client_socket
+    tcp_echo
+)
 
-add_executable(tcp_client_socket ${TCP_CLIENT_SOCKET_SOURCE})
+foreach(example ${EXAMPLES})
+  add_executable(${example} ${example}.cc)
+  target_link_libraries(${example} csockpp)
+endforeach()
 
-target_link_libraries(tcp_client_socket csockpp)
